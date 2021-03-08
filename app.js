@@ -6,20 +6,16 @@ const helmet = require('helmet');
 const session = require('express-session');
 const emailValidator = require('email-validator');
 const dotenv = require('dotenv').config();
-//const passwordValidator = require('password-validator');
+const passwordValidator = require('password-validator');
  
 const sauceRoutes = require('./routes/Sauce')
 const userRoutes = require('./routes/user')
 const app = express();
 
 mongoose.connect(
-  { 
-    host: process.env.DB_HOST,
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    useNewUrlParser: true,
-    useUnifiedTopology: true 
-  })
+  process.env.DB_HOST,
+    {useNewUrlParser: true,
+    useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
@@ -31,12 +27,20 @@ mongoose.connect(
   });
 
 
-emailValidator.validate('mail121-_gmail.com')
+let schema = new passwordValidator();
+schema
+.is().min(8)
+.has().uppercase()
+.has().lowercase()
+.has().digits(2)
+.has().not().spaces() 
+
+emailValidator.validate('test@email.com')
  
 app.use(bodyParser.json());
 app.use(helmet());
 
- app.set('trust proxy', 1);
+app.set('trust proxy', 1);
 app.use(session({
   secret: 's3Cur3',
   name: 'sessionID',

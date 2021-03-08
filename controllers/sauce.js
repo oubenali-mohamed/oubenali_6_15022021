@@ -50,3 +50,52 @@ exports.getAllSauces =  (req, res, next) => {
     .catch(error=> res.status(400).json({error}));
  };
 
+ exports.likeSauce = (req, res, next) => {
+    Sauce.findOne({ _id: req.params.id }) // récupération de la sauce
+   .then(sauce => {
+       switch (req.body.like) { 
+           case -1: // dislike
+               Sauce.updateOne({ _id: req.params.id }, {
+                   $inc: {dislikes:1}, // L'utilsateur a disliké
+                   $push: {usersDisliked: req.body.userId}, // id enregistré dans le tableau de dislikeurs
+                   _id: req.params.id
+               })
+                   .then(() => res.status(200).json({ message: 'Dislike ajouté !'}))
+                   .catch( error => res.status(400).json({ error }))
+               break;
+           case 0: // retrait du like
+               if (sauce.usersLiked.find(user => user === req.body.userId)) {
+                   Sauce.updateOne({ _id : req.params.id }, {
+                       $inc: {likes:-1}, // Like retiré
+                       $pull: {usersLiked: req.body.userId},
+                       _id: req.params.id
+                   })
+                       .then(() => res.status(200).json({message: ' Like retiré !'}))
+                       .catch( error => res.status(400).json({ error }))
+               }
+               if (sauce.usersDisliked.find(user => user === req.body.userId)) {
+                   Sauce.updateOne({ _id : req.params.id }, {
+                       $inc: {dislikes:-1}, // dislike retiré
+                       $pull: {usersDisliked: req.body.userId},
+                       _id: req.params.id
+                   })
+                       .then(() => res.status(200).json({message: ' Dislike retiré !'}))
+                       .catch( error => res.status(400).json({ error }));
+               }
+               break;
+           case 1: // like
+               Sauce.updateOne({ _id: req.params.id }, {
+                   $inc: { likes:1}, //like ajouté
+                   $push: { usersLiked: req.body.userId},
+                   _id: req.params.id
+               })
+                   .then(() => res.status(200).json({ message: 'Like ajouté !'}))
+                   .catch( error => res.status(400).json({ error }));
+               break;
+           default:
+               return res.status(400).json({ error });
+       }
+   })
+   .catch(error => res.status(500).json({ error }))
+  };
+
