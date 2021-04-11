@@ -1,25 +1,47 @@
 const Sauce = require('../models/Sauce');
-const fs = require('fs');
+const fs = require('fs'); // acces au fichier systeme
+const app = require('../app');
 
-exports.createSauce =  (req, res, next) => {
+
+exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
-    delete sauceObject._id
-    const sauce = new Sauce({
-        ...sauceObject,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    if(sauceObject.name.length < 5){
+        res.status(400).json('le nom de la sauce doit etre supérieur à 5')
+        return;
+    } 
+    if(sauceObject.manufacturer.length < 5) {
+        res.status(400).json('Manufacturer doit contenir au minimum 5 caractéres')
+        return;
+    }
+    if(sauceObject.description.length < 15) {
+        res.status(400).json('la description doit contenir au minimum 15 caractéres')
+        return;
+    }
+    if(sauceObject.mainPepper.length < 5) {
+        res.status(400).json('MainPepper doit contenir au minimum 5 caractéres')
+        return;
+    }
+    if(Number(sauceObject.heat) < 0 && Number(sauceObject.heat) > 10) {
+        res.status(400).json('la note doit etre comprise entre 1 et 10')
+        return;
+    }
+        delete sauceObject._id //supprime l'ID car il est généré automatiquement par mongoose
+        const sauce = new Sauce({ //instance de notre modéle
+        ...sauceObject, //recupére toutes les infos de la sauce dans la requete
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`//url de l'image
     });
-    sauce.save()
+    sauce.save() //appeller la méthode save qui enregistre le modélde dans la base
     .then(() => res.status(201).json({message: 'sauce enregistré'}))
     .catch(error => res.status(400).json({error}))
 };
 
 exports.modifySauce =  (req, res, next) => {
-    const sauceObject = req.file ?
+    const sauceObject = req.file ? //operateur ternaire pour voir req.file existe
     {
         ...JSON.parse(req.body.sauce),
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
-    } : {...req.body};
-    Sauce.updateOne({_id: req.params.id}, {...sauceObject, _id: req.params.id})
+    } : {...req.body}; //copie de req.body si elle n'existe pas
+    Sauce.updateOne({_id: req.params.id}, {...sauceObject, _id: req.params.id})//objet de comparaison en 1er argument nouvelle objet en 2eme argument
     .then(() => res.status(200).json({message: 'Sauce modifiée'}))
     .catch(error => res.status().json({error}))
 };
@@ -27,8 +49,8 @@ exports.modifySauce =  (req, res, next) => {
 exports.deleteSauce =  (req, res, next) => {
     Sauce.findOne({_id: req.params.id})
     .then(sauce => {
-        const filename = sauce.imageUrl.split('/images/')[1];
-        fs.unlink(`images/${filename}`, () => {
+        const filename = sauce.imageUrl.split('/images/')[1];//nom du fichier
+        fs.unlink(`images/${filename}`, () => {//méthode pour supprimer le fichier
             Sauce.deleteOne({_id: req.params.id})
             .then(() => res.status(200).json({message: 'Sauce supprimée'}))
             .catch(error => res.status(400).json({error}))
@@ -39,13 +61,13 @@ exports.deleteSauce =  (req, res, next) => {
 };
 
 exports.getOneSauce =  (req, res, next) => {
-    Sauce.findOne({_id: req.params.id})
+    Sauce.findOne({_id: req.params.id}) // récupére une seul sauce: ID de la sauce est le meme que l'ID de la requete
     .then(sauce => res.status(200).json(sauce))
     .catch(error => res.status(404).json({error}))
 };
 
 exports.getAllSauces =  (req, res, next) => {
-    Sauce.find()
+    Sauce.find() //récupération de toutes les sauces
     .then(sauces => res.status(200).json(sauces))
     .catch(error=> res.status(400).json({error}));
  };

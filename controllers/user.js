@@ -1,29 +1,29 @@
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt');//package de cryptage de mot de passe
 const User = require('../models/user');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');//créeret vérifier les tokens
 const emailValidator = require('email-validator');
 const passwordValidator = require('password-validator');
  
 exports.signup = (req, res, next) => {
-    let checkEmail = emailValidator.validate(req.body.email);
-    let checkPass = new passwordValidator();
+    let checkEmail = emailValidator.validate(req.body.email); //validation de l'email
+    let checkPass = new passwordValidator(); 
     checkPass
     .is().min(8)
     .has().uppercase()
     .has().lowercase()
     .has().digits(2)
     .has().not().spaces()
-    let validPass = checkPass.validate(req.body.password);
+    let validPass = checkPass.validate(req.body.password);//validation de mot de passe
     
     if(checkEmail && validPass) {
-        bcrypt.hash(req.body.password, 10)
+        bcrypt.hash(req.body.password, 10) //on hash le mot de passe et on exécute le hashage 10 fois
         .then(hash => {
-            const user = new User({
+            const user = new User({ // création du nouvel utilisateur
                 email: req.body.email,
                 password: hash
             });
-            user.save()
+            user.save() //enregistrement de l'user dans la base de donnée
             .then(() => res.status(201).json({message: 'utilisateur crée'}))
             .catch(error => res.status(400).json({error}))
         })
@@ -46,12 +46,12 @@ exports.login = (req, res, next) => {
     let validPass = checkPass.validate(req.body.password);
 
     if(checkEmail && validPass) {
-        User.findOne({email: req.body.email})
+        User.findOne({email: req.body.email})// trouver l'user de la base de donnée s'il existe
         .then(user => {
             if(!user) {
                 return res.status(401).json({message: 'Utilisatuer non trouvé'});
             }
-            bcrypt.compare(req.body.password, user.password)
+            bcrypt.compare(req.body.password, user.password)// on compare le mot de passe avec le hash du user enregistré
             .then(valid => {
                 if(!valid) {
                     return res.status(401).json({message: 'Mot de passe incorrect'});   
@@ -59,9 +59,9 @@ exports.login = (req, res, next) => {
                 res.status(200).json({
                     userId: user._id,
                     token: jwt.sign(
-                        {userId: user._id},
-                        'RANDOM_TOKEN_SECRET',
-                        {expiresIn: '24h'}
+                        {userId: user._id},//user encodé
+                        'RANDOM_TOKEN_SECRET',// clé secréte pour encodage
+                        {expiresIn: '24h'} // expiration du token
                     )
                 });
             })
@@ -71,5 +71,4 @@ exports.login = (req, res, next) => {
     }else{
         res.status(500).json('utilisateur non trouvé');
     }
-   
 };

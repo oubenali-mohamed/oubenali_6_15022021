@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const sauceSchema = mongoose.Schema({
+const sauceSchema = mongoose.Schema({ //fonction schema a laquelleon passe l'objet
     userId: {type: String, required: true},
     name: {type: String, required: true},
     manufacturer: {type: String, required: true},
@@ -10,8 +10,8 @@ const sauceSchema = mongoose.Schema({
     heat: {type: Number, required: true},
     likes: {type: Number},
     dislikes: {type: Number},
-    userliked: {type: [String]},
-    userDisliked: {type: [String]},
+    usersLiked: {type: [String]},
+    usersDisliked: {type: [String]},
 });
 
-module.exports = mongoose.model('sauce', sauceSchema);
+module.exports = mongoose.model('sauce', sauceSchema); //on exporte le schema avec la méthode model
