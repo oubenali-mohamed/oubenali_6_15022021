@@ -108,7 +108,7 @@ exports.getAllSauces =  (req, res, next) => {
            case 1: // like
                Sauce.updateOne({ _id: req.params.id }, {
                    $inc: { likes:1}, //like ajouté
-                   $push: { usersLiked: req.body.userId},
+                   $push: { usersLiked: req.body.userId}, // id enregistré dans le tableau de like
                    _id: req.params.id
                })
                    .then(() => res.status(200).json({ message: 'Like ajouté !'}))

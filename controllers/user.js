@@ -1,11 +1,13 @@
 
 const bcrypt = require('bcrypt');//package de cryptage de mot de passe
 const User = require('../models/user');
-const jwt = require('jsonwebtoken');//créeret vérifier les tokens
+const jwt = require('jsonwebtoken');//créer et vérifier les tokens
 const emailValidator = require('email-validator');
 const passwordValidator = require('password-validator');
+const MaskData = require('maskdata');
  
 exports.signup = (req, res, next) => {
+    
     let checkEmail = emailValidator.validate(req.body.email); //validation de l'email
     let checkPass = new passwordValidator(); 
     checkPass
@@ -15,12 +17,20 @@ exports.signup = (req, res, next) => {
     .has().digits(2)
     .has().not().spaces()
     let validPass = checkPass.validate(req.body.password);//validation de mot de passe
+
+    const emailMask2Options = {
+        maskWith: "*", 
+        unmaskedStartCharactersBeforeAt: 3,
+        unmaskedEndCharactersAfterAt: 2,
+        maskAtTheRate: false
+       };
+    const maskedEmail = MaskData.maskEmail2(req.body.email, emailMask2Options);
     
-    if(checkEmail && validPass) {
+   if(checkEmail && validPass) {
         bcrypt.hash(req.body.password, 10) //on hash le mot de passe et on exécute le hashage 10 fois
         .then(hash => {
             const user = new User({ // création du nouvel utilisateur
-                email: req.body.email,
+                email: maskedEmail,
                 password: hash
             });
             user.save() //enregistrement de l'user dans la base de donnée
@@ -45,8 +55,16 @@ exports.login = (req, res, next) => {
     .has().not().spaces()
     let validPass = checkPass.validate(req.body.password);
 
+    const emailMask2Options = {
+        maskWith: "*", 
+        unmaskedStartCharactersBeforeAt: 3,
+        unmaskedEndCharactersAfterAt: 2,
+        maskAtTheRate: false,
+    };
+    const maskedEmail = MaskData.maskEmail2(req.body.email, emailMask2Options);
+
     if(checkEmail && validPass) {
-        User.findOne({email: req.body.email})// trouver l'user de la base de donnée s'il existe
+        User.findOne({email: maskedEmail})// trouver l'user de la base de donnée s'il existe
         .then(user => {
             if(!user) {
                 return res.status(401).json({message: 'Utilisatuer non trouvé'});

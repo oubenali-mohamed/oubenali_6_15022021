@@ -7,7 +7,6 @@ const session = require('express-session');
 const dotenv = require('dotenv').config();
 const sauceRoutes = require('./routes/Sauce');
 const userRoutes = require('./routes/user');
-const rateLimit = require('express-rate-limit');
 const app = express(); //application express créée avec la méthode express
 
 //connection base de donnée
@@ -38,11 +37,7 @@ app.use(session({ //génére un id de session
   saveUninitialized: true,
  })); 
 
-  const limiter = rateLimit({//limite brute force
-   windowMs: 15 * 60 * 1000,
-   maw: 4,
-  }); 
-app.use('/api/auth', limiter, userRoutes);
+app.use('/api/auth', userRoutes);
 app.use('/images', express.static(path.join(__dirname, 'images')));//donne accés au chemin de notre systeme de fichier
 app.use('/api/sauces', sauceRoutes);
 
