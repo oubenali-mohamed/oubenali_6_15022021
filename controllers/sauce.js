@@ -5,23 +5,23 @@ const app = require('../app');
 
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
-    if(sauceObject.name.length < 5){
+    if(sauceObject.name == null || sauceObject.name.length < 5){
         res.status(400).json('le nom de la sauce doit etre supérieur à 5')
         return;
     } 
-    if(sauceObject.manufacturer.length < 5) {
+    if(sauceObject.manufacturer == null || sauceObject.manufacturer.length < 5) {
         res.status(400).json('Manufacturer doit contenir au minimum 5 caractéres')
         return;
     }
-    if(sauceObject.description.length < 15) {
+    if(sauceObject.description == null || sauceObject.description.length < 15) {
         res.status(400).json('la description doit contenir au minimum 15 caractéres')
         return;
     }
-    if(sauceObject.mainPepper.length < 5) {
+    if(sauceObject.mainPepper == null || sauceObject.mainPepper.length < 5) {
         res.status(400).json('MainPepper doit contenir au minimum 5 caractéres')
         return;
     }
-    if(Number(sauceObject.heat) < 0 && Number(sauceObject.heat) > 10) {
+    if(Number(sauceObject.heat) == null || Number(sauceObject.heat) < 0 && Number(sauceObject.heat) > 10) {
         res.status(400).json('la note doit etre comprise entre 1 et 10')
         return;
     }
@@ -36,11 +36,31 @@ exports.createSauce = (req, res, next) => {
 };
 
 exports.modifySauce =  (req, res, next) => {
-    const sauceObject = req.file ? //operateur ternaire pour voir req.file existe
-    {
-        ...JSON.parse(req.body.sauce),
+   const sauceObject = req.file ? //operateur ternaire pour voir req.file existe
+   {
+       ...JSON.parse(req.body.sauce),
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
     } : {...req.body}; //copie de req.body si elle n'existe pas
+    if(sauceObject.name == null || sauceObject.name.length < 5){
+        res.status(400).json('le nom de la sauce doit etre supérieur à 5')
+        return;
+    } 
+    if(sauceObject.manufacturer == null || sauceObject.manufacturer.length < 5) {
+        res.status(400).json('Manufacturer doit contenir au minimum 5 caractéres')
+        return;
+    }
+    if(sauceObject.description == null || sauceObject.description.length < 15) {
+        res.status(400).json('la description doit contenir au minimum 15 caractéres')
+        return;
+    }
+    if(sauceObject.mainPepper == null || sauceObject.mainPepper.length < 5) {
+        res.status(400).json('MainPepper doit contenir au minimum 5 caractéres')
+        return;
+    }
+    if( Number(sauceObject.heat) < 0 && Number(sauceObject.heat) > 10) {
+        res.status(400).json('la note doit etre comprise entre 1 et 10')
+        return;
+    }
     Sauce.updateOne({_id: req.params.id}, {...sauceObject, _id: req.params.id})//objet de comparaison en 1er argument nouvelle objet en 2eme argument
     .then(() => res.status(200).json({message: 'Sauce modifiée'}))
     .catch(error => res.status().json({error}))

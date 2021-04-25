@@ -4,7 +4,7 @@ const User = require('../models/user');
 const jwt = require('jsonwebtoken');//créer et vérifier les tokens
 const emailValidator = require('email-validator');
 const passwordValidator = require('password-validator');
-const MaskData = require('maskdata');
+const sha256 = require('sha256');
  
 exports.signup = (req, res, next) => {
     
@@ -18,13 +18,8 @@ exports.signup = (req, res, next) => {
     .has().not().spaces()
     let validPass = checkPass.validate(req.body.password);//validation de mot de passe
 
-    const emailMask2Options = {
-        maskWith: "*", 
-        unmaskedStartCharactersBeforeAt: 3,
-        unmaskedEndCharactersAfterAt: 2,
-        maskAtTheRate: false
-       };
-    const maskedEmail = MaskData.maskEmail2(req.body.email, emailMask2Options);
+     
+    const maskedEmail = sha256(req.body.email);
     
    if(checkEmail && validPass) {
         bcrypt.hash(req.body.password, 10) //on hash le mot de passe et on exécute le hashage 10 fois
@@ -55,14 +50,8 @@ exports.login = (req, res, next) => {
     .has().not().spaces()
     let validPass = checkPass.validate(req.body.password);
 
-    const emailMask2Options = {
-        maskWith: "*", 
-        unmaskedStartCharactersBeforeAt: 3,
-        unmaskedEndCharactersAfterAt: 2,
-        maskAtTheRate: false,
-    };
-    const maskedEmail = MaskData.maskEmail2(req.body.email, emailMask2Options);
-
+    const maskedEmail = sha256(req.body.email);
+    
     if(checkEmail && validPass) {
         User.findOne({email: maskedEmail})// trouver l'user de la base de donnée s'il existe
         .then(user => {
@@ -78,7 +67,7 @@ exports.login = (req, res, next) => {
                     userId: user._id,
                     token: jwt.sign(
                         {userId: user._id},//user encodé
-                        'RANDOM_TOKEN_SECRET',// clé secréte pour encodage
+                        process.env.SECRET_KEY_TOKEN,// clé secréte pour encodage
                         {expiresIn: '24h'} // expiration du token
                     )
                 });
